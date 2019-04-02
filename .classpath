@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/java-8-openjdk-amd64"/>
+	<classpathentry kind="lib" path="lib/cdk-core.jar"/>
+	<classpathentry kind="lib" path="lib/cdk-data.jar"/>
+	<classpathentry kind="lib" path="lib/cdk-interfaces.jar"/>
+	<classpathentry kind="lib" path="lib/cdk-io.jar"/>
+	<classpathentry kind="lib" path="lib/cdk-sdg.jar"/>
+	<classpathentry kind="lib" path="lib/cdk-standard.jar"/>
+	<classpathentry kind="lib" path="lib/cdk-valencycheck.jar"/>
+	<classpathentry kind="lib" path="lib/jgrapht.jar"/>
+	<classpathentry kind="lib" path="lib/vecmath1.2-1.14.jar"/>
+	<classpathentry kind="lib" path="lib/cdk-legacy.jar"/>
+	<classpathentry kind="lib" path="lib/cdk-ioformats.jar"/>
+	<classpathentry kind="lib" path="lib/guava-17.0.jar"/>
+	<classpathentry kind="lib" path="lib/cdk-extra.jar"/>
+	<classpathentry kind="lib" path="lib/cdk-atomtype.jar"/>
+	<classpathentry kind="lib" path="lib/cdk-smiles.jar"/>
+	<classpathentry kind="lib" path="lib/beam-core-0.9.2.jar"/>
+	<classpathentry kind="lib" path="lib/beam-func-0.9.2.jar"/>
+	<classpathentry kind="lib" path="lib/xom-1.1.jar"/>
+	<classpathentry kind="lib" path="lib/cdk-qsar.jar"/>
+	<classpathentry kind="lib" path="lib/cdk-qsaratomic.jar"/>
+	<classpathentry kind="lib" path="lib/cdk-qsarmolecular.jar"/>
+	<classpathentry kind="lib" path="lib/cdk-isomorphism.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

@@ -1,0 +1,1 @@
+This java project predicts hmbc, hsqc, and (if wished) hsqctocsy spectra for a list of smiles. Primarily, the project is to be exported into a jar for the nmrfilter project. There are test files in here for a test run. The HOSE code files must be added separately (too large for github).

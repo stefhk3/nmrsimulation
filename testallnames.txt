@@ -1,0 +1,105 @@
+2-Aminobutyric Acid
+2-Hydroxypyridine
+2-Methylbutanoic Acid
+3-Hydroxybutyric Acid
+3-Indoleacetic Acid
+3-Indolelactic Acid
+4-Hydroxybenzoic Acid
+4-Hydroxybutyric Acid
+4-Hydroxyproline
+6-Hydroxynicotinic Acid
+Acetaminophen
+Acetylglycine
+Alanine
+Alpha-Hydroxyisobutyric Acid
+Aminomalonic Acid
+Arabitol
+Arachidic Acid
+Arachidonic Acid
+Benzene-1,2,4-Triol
+Benzoic Acid
+Beta-Cyano-L-Alanine
+Caffeic Acid
+Capric Acid
+Cholesterol
+Citric Acid
+Creatinine
+Cystine
+D-Fructose
+D-Galactopyranose
+D-Galactose
+D-Glucopyranose
+D-Glucose
+D-Maltose
+Dodecanoic Acid
+D-Xylitol
+Epsilon-Caprolactam
+Erythronic Acid
+Fructose
+Fucose
+Fumaric Acid
+Glucitol
+Gluconic Acid
+Glucose
+Glutamic Acid
+Glutamine
+Glyceric Acid
+Glycerol
+Glycine
+Glycolic Acid
+Heptadecanoic Acid
+Hydroxyproline
+Isobutyric Acid
+Isoleucine
+Isomaltose
+L-Alanine
+L-Asparagine
+L-Aspartic Acid
+L-Cysteine
+L-Cystine
+Leucine
+L-Glutamic Acid
+L-Glutamine
+L-Histidine
+Linoleic Acid
+L-Isoleucine
+L-Lactic Acid
+L-Leucine
+L-Lysine
+L-Methionine
+L-Ornithine
+L-Phenylalanine
+L-Proline
+L-Serine
+L-Threonine
+Lysine
+Lyxose
+Malonic Acid
+Maltose
+Methylmaleic Acid
+Methylmalonic Acid
+Myo-Inositol
+Myristic Acid
+N-Acetyl-L-Lysine
+Nicotinic Acid
+Oleic Acid
+Ornithine
+Palmitelaidic Acid
+Palmitic Acid
+P-Cresol
+Phenylalanine
+Phosphoric Acid
+Picolinic Acid
+Proline
+Pyrogallol
+Ribitol
+Salicylic Acid
+Serine
+Stearic Acid
+Tartaric Acid
+Threonine
+Tryptophan
+Tyrosine
+Urea
+Uric Acid
+Valine
