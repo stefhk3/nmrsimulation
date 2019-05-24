@@ -36,6 +36,15 @@ public class Simulate {
         public static void main(String[] args) throws Exception {
         		Properties props=new Properties();
         		props.load(new FileReader("nmrproc.properties"));
+        		String projectdir=new String(props.getProperty("datadir")+File.separator+args[0]+File.separator);
+        		File localprops=new File(projectdir+"nmrproc.properties");
+        		if(localprops.exists()) {
+        			Properties props2=new Properties();
+        			props2.load(new FileReader(localprops));
+        			for(Object prop : props2.keySet()) {
+        				props.setProperty((String)prop, props2.getProperty((String)prop));
+        			}
+        		}
         		boolean doHsqcTocsy=false;
         		if(props.containsKey("usehsqctocsy") && props.get("usehsqctocsy").equals("true"))
         			doHsqcTocsy=true;
@@ -54,21 +63,23 @@ public class Simulate {
                 //    use3d=false;
 /* get mol file reader (for 1 structure) from file name */
                 //IteratingSDFReader sdfreader = new IteratingSDFReader(new FileReader("testall.sdf"), DefaultChemObjectBuilder.getInstance());
-                FileOutputStream fos=new FileOutputStream(new File(props.getProperty("predictionoutput")));
+                FileOutputStream fos=new FileOutputStream(projectdir+props.getProperty("predictionoutput"));
                 FileOutputStream foshsqc=null;
                 FileOutputStream foshmbc=null;
                 FileOutputStream foshsqctocsy=null;
                 if(debug) {
-                	foshsqc=new FileOutputStream(new File(props.getProperty("predictionoutput")+"hsqc"));
-                	foshmbc=new FileOutputStream(new File(props.getProperty("predictionoutput")+"hmbc"));
-                	foshsqctocsy=new FileOutputStream(new File(props.getProperty("predictionoutput")+"hsqctocsy"));
+                	foshsqc=new FileOutputStream(new File(projectdir+props.getProperty("predictionoutput")+"hsqc"));
+                	foshmbc=new FileOutputStream(new File(projectdir+props.getProperty("predictionoutput")+"hmbc"));
+                	if(doHsqcTocsy)
+                		foshsqctocsy=new FileOutputStream(new File(projectdir+props.getProperty("predictionoutput")+"hsqctocsy"));
                 }
-                IteratingSMILESReader smilesreader = new IteratingSMILESReader(new FileInputStream(new File(props.getProperty("msmsinput"))), DefaultChemObjectBuilder.getInstance());
+                IteratingSMILESReader smilesreader = new IteratingSMILESReader(new FileInputStream(new File(projectdir+props.getProperty("msmsinput"))), DefaultChemObjectBuilder.getInstance());
 /* get molecule for reader */
                 String solvent=props.getProperty("solvent");
                 BufferedReader br=null;
                 if(debug)
-                	br=new BufferedReader(new FileReader(new File("testallnames.txt")));
+                	br=new BufferedReader(new FileReader(new File(projectdir+"testallnames.txt")));
+                //int k=0;
                 while(smilesreader.hasNext()) {
                 	//System.out.println(k++);
                 	IAtomContainer mol = smilesreader.next();
@@ -113,8 +124,12 @@ public class Simulate {
                 		String name=br.readLine()+"\r\n";
                 		foshmbc.write(name.getBytes());
                 		foshsqc.write(name.getBytes());
-                		foshsqctocsy.write(name.getBytes());
+                		if(doHsqcTocsy)
+                			foshsqctocsy.write(name.getBytes());
+                		//System.out.println(name);
                 	}
+                	int predictioncount=0;
+                	int spheres=0;
             		//fos.write(new String("\nhsqc\n").getBytes());
                 	//we use this map to get atoms by id
                 	Map<String, IAtom> atomsbyid = new HashMap<String, IAtom>();
@@ -124,6 +139,9 @@ public class Simulate {
                         atomsbyid.put(curAtom.getID(), curAtom);
                         if(curAtom.getAtomicNumber() == 6) {
                         	float[] resultc = predictor.predict(mol, curAtom, use3d, solvent);
+                        	predictioncount++;
+                        	spheres+=resultc[4];
+                        	//System.out.println(i+" c "+resultc[4]);
                         	//from a carbon atom, we get the hs which are 2 or 3 bonds away
                         	List<IAtom> away1 = mol.getConnectedAtomsList(curAtom);
                         	for(IAtom away1atom : away1) {
@@ -131,9 +149,14 @@ public class Simulate {
                         		//these are 1 bonds away, if it's a hydrogen, it's a match
                         		if(away1atom.getAtomicNumber()==1) {
                                 	float[] resulth = predictor.predict(mol, away1atom, use3d, solvent);
+                                	predictioncount++;
+                                	spheres+=resulth[4];
+
+                                	//System.out.println(i+" h "+resultc[4]);
+
                                 	if(!done.contains(resultc[1]+";"+resulth[1])) {
                                 		//System.out.format(Locale.US, "%3d   %3d%8.2f%8.2f\n", i+1, mol.getAtomNumber(away1atom)+1, resultc[1], resulth[1]);
-                                		fos.write(new String(resultc[1]+","+resulth[1]+"\n").getBytes());
+                                		fos.write(new String(resultc[1]+","+resulth[1]+",q\n").getBytes());
                                 		if(debug)
                                 			foshsqc.write(new String(resultc[1]+","+resulth[1]+"\n").getBytes());
                                 		//System.out.println(resultc[4]+" "+resulth[4]);
@@ -152,6 +175,8 @@ public class Simulate {
                         	//System.out.println(i);
                         	boolean hashydrogen=false;
                         	float[] resultc = predictor.predict(mol, curAtom, use3d, solvent);
+                        	predictioncount++;
+                        	spheres+=resultc[4];
                         	//from a carbon atom, we get the hs which are 2 or 3 bonds away
                         	List<IAtom> away1 = mol.getConnectedAtomsList(curAtom);
                         	for(IAtom away1atom : away1) {
@@ -162,9 +187,11 @@ public class Simulate {
                             		//these are 2 bonds away, if it's a hydrogen, it's a match
                             		if(away2atom.getAtomicNumber()==1) {
                                     	float[] resulth = predictor.predict(mol, away2atom, use3d, solvent);
+                                    	predictioncount++;
+                                    	spheres+=resulth[4];
                                     	if(!done.contains(resultc[1]+";"+resulth[1])) {
                                     		//System.out.format(Locale.US, "%3d   %3d%8.2f%8.2f\n", i+1, mol.getAtomNumber(away2atom)+1, resultc[1], resulth[1]);
-                                    		fos.write(new String(resultc[1]+","+resulth[1]+"\n").getBytes());
+                                    		fos.write(new String(resultc[1]+","+resulth[1]+",b\n").getBytes());
                                     		if(debug)
                                     			foshmbc.write(new String(resultc[1]+","+resulth[1]+"\n").getBytes());
                                     		//System.out.println(resultc[1]+" "+resulth[1]);
@@ -176,10 +203,12 @@ public class Simulate {
                                 		//these are 3 bonds away, if it's a hydrogen, it's a match
                                 		if(away3atom.getAtomicNumber()==1) {
 	                                    	float[] resulth = predictor.predict(mol, away3atom, use3d, solvent);
+	                                    	predictioncount++;
+	                                    	spheres+=resulth[4];
 	                                    	if(!done.contains(resultc[1]+";"+resulth[1])) {
 	                                    		//System.out.format(Locale.US, "%3d   %3d%8.2f%8.2f\n", i+1, mol.getAtomNumber(away3atom)+1, resultc[1], resulth[1]);
 	                                    		//System.out.println(resultc[1]+" "+resulth[1]);
-	                                    		fos.write(new String(resultc[1]+","+resulth[1]+"\n").getBytes());
+	                                    		fos.write(new String(resultc[1]+","+resulth[1]+",b\n").getBytes());
 	                                    		if(debug)
 	                                    			foshmbc.write(new String(resultc[1]+","+resulth[1]+"\n").getBytes());
 	                                        	done.add(resultc[1]+";"+resulth[1]);
@@ -204,10 +233,12 @@ public class Simulate {
 		        	                        				if(atom4.getAtomicNumber()==1) {
 		        	                        					//System.out.println("1");
 		        	                        					float[] resulth = predictor.predict(mol, atom4, use3d, solvent);
+		        	                                        	predictioncount++;
+		        	                                        	spheres+=resulth[4];
 		        		                                    	if(!donetocsy.contains(resultc[1]+";"+resulth[1])) {
 		        		                                    		//System.out.format(Locale.US, "%3d   %3d%8.2f%8.2f\n", i+1, mol.getAtomNumber(away3atom)+1, resultc[1], resulth[1]);
 		        		                                    		//System.out.println(resultc[1]+" "+resulth[1]);
-		        		                                    		fos.write(new String(resultc[1]+","+resulth[1]+"\n").getBytes());
+		        		                                    		fos.write(new String(resultc[1]+","+resulth[1]+",t\n").getBytes());
 		        		                                    		if(debug)
 		        		                                    			foshsqctocsy.write(new String(resultc[1]+","+resulth[1]+"\n").getBytes());
 		        		                                        	donetocsy.add(resultc[1]+";"+resulth[1]);
@@ -225,13 +256,20 @@ public class Simulate {
                         	}
                         }
                 	}
+                    if(debug) {
+                    	foshsqc.write(new String("Quality "+(spheres/predictioncount)+"\n").getBytes());
+                    	foshmbc.write(new String("Quality "+(spheres/predictioncount)+"\n").getBytes());
+                    	if(doHsqcTocsy)
+                    		foshsqctocsy.write(new String("Quality "+(spheres/predictioncount)+"\n").getBytes());
+                    }
                 	fos.write(new String("/\n").getBytes());
                 }
                 fos.close();
                 if(debug) {
                 	foshsqc.close();
                 	foshmbc.close();
-                	foshsqctocsy.close();
+                	if(doHsqcTocsy)
+                		foshsqctocsy.close();
                 }
                 smilesreader.close();
             	java.lang.System.exit(0);
