@@ -63,22 +63,23 @@ public class Simulate {
                 //    use3d=false;
 /* get mol file reader (for 1 structure) from file name */
                 //IteratingSDFReader sdfreader = new IteratingSDFReader(new FileReader("testall.sdf"), DefaultChemObjectBuilder.getInstance());
-                FileOutputStream fos=new FileOutputStream(projectdir+props.getProperty("predictionoutput"));
+                FileOutputStream fos=new FileOutputStream(projectdir+File.separatorChar+"result"+File.separatorChar+props.getProperty("predictionoutput"));
                 FileOutputStream foshsqc=null;
                 FileOutputStream foshmbc=null;
                 FileOutputStream foshsqctocsy=null;
                 if(debug) {
-                	foshsqc=new FileOutputStream(new File(projectdir+props.getProperty("predictionoutput")+"hsqc"));
-                	foshmbc=new FileOutputStream(new File(projectdir+props.getProperty("predictionoutput")+"hmbc"));
+                	foshsqc=new FileOutputStream(new File(projectdir+File.separatorChar+"result"+File.separatorChar+props.getProperty("predictionoutput")+"hsqc"));
+                	foshmbc=new FileOutputStream(new File(projectdir+File.separatorChar+"result"+File.separatorChar+props.getProperty("predictionoutput")+"hmbc"));
                 	if(doHsqcTocsy)
-                		foshsqctocsy=new FileOutputStream(new File(projectdir+props.getProperty("predictionoutput")+"hsqctocsy"));
+                		foshsqctocsy=new FileOutputStream(new File(projectdir+File.separatorChar+File.separatorChar+"result"+props.getProperty("predictionoutput")+"hsqctocsy"));
                 }
                 IteratingSMILESReader smilesreader = new IteratingSMILESReader(new FileInputStream(new File(projectdir+props.getProperty("msmsinput"))), DefaultChemObjectBuilder.getInstance());
 /* get molecule for reader */
                 String solvent=props.getProperty("solvent");
                 BufferedReader br=null;
-                if(debug)
-                	br=new BufferedReader(new FileReader(new File(projectdir+"testallnames.txt")));
+                File namesfile=new File(projectdir+props.getProperty("msmsinput").substring(0,props.getProperty("msmsinput").length()-4)+"names.txt");
+                if(namesfile.exists())
+                	br=new BufferedReader(new FileReader(namesfile));
                 //int k=0;
                 while(smilesreader.hasNext()) {
                 	//System.out.println(k++);
@@ -120,7 +121,7 @@ public class Simulate {
                 	//System.out.println("  C    H    c shift  h shift");
                 	//System.out.println(" ---------------------------");
 /* loop over atoms in mol */
-                	if(debug) {
+                	if(namesfile.exists()) {
                 		String name=br.readLine()+"\r\n";
                 		foshmbc.write(name.getBytes());
                 		foshsqc.write(name.getBytes());
