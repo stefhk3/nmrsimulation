@@ -67,7 +67,8 @@ public class Simulate {
                 FileOutputStream foshsqc=null;
                 FileOutputStream foshmbc=null;
                 FileOutputStream foshsqctocsy=null;
-                if(debug) {
+                File namesfile=new File(projectdir+props.getProperty("msmsinput").substring(0,props.getProperty("msmsinput").length()-4)+"names.txt");
+                if(namesfile.exists()) {
                 	foshsqc=new FileOutputStream(new File(projectdir+File.separatorChar+"result"+File.separatorChar+props.getProperty("predictionoutput")+"hsqc"));
                 	foshmbc=new FileOutputStream(new File(projectdir+File.separatorChar+"result"+File.separatorChar+props.getProperty("predictionoutput")+"hmbc"));
                 	if(doHsqcTocsy)
@@ -77,7 +78,6 @@ public class Simulate {
 /* get molecule for reader */
                 String solvent=props.getProperty("solvent");
                 BufferedReader br=null;
-                File namesfile=new File(projectdir+props.getProperty("msmsinput").substring(0,props.getProperty("msmsinput").length()-4)+"names.txt");
                 if(namesfile.exists())
                 	br=new BufferedReader(new FileReader(namesfile));
                 //int k=0;
