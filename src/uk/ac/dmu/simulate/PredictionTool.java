@@ -238,6 +238,8 @@ public class PredictionTool
   public float[] predict(IAtomContainer mol, IAtom atom, boolean useExtendedHOSECode, String solvent)
     throws CDKException, Exception
   {
+	  if( mapsmap.get(solvent)==null)
+		  throw new CDKException("Solvent "+solvent+" is not in list, solvents are "+mapsmap.keySet());
     return generalPredict(mol, atom, true, true, useExtendedHOSECode, -1, -1, new StringBuffer(), false, true, null, 6, false, null, 6, false, true, solvent);
   }
   
