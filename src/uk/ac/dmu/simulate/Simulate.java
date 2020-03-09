@@ -48,6 +48,10 @@ public class Simulate {
         		boolean doHsqcTocsy=false;
         		if(props.containsKey("usehsqctocsy") && props.get("usehsqctocsy").equals("true"))
         			doHsqcTocsy=true;
+        		boolean doHmbc=true;
+        		if(props.containsKey("usehmbc") && props.get("usehmbc").equals("false"))
+        			doHmbc=false;
+        		System.out.println(doHmbc);
         		boolean debug=false;
         		if(props.containsKey("debug") && props.get("debug").equals("true"))
         			debug=true;
@@ -70,7 +74,8 @@ public class Simulate {
                 File namesfile=new File(projectdir+props.getProperty("msmsinput").substring(0,props.getProperty("msmsinput").length()-4)+"names.txt");
                 if(namesfile.exists()) {
                 	foshsqc=new FileOutputStream(new File(projectdir+File.separatorChar+"result"+File.separatorChar+props.getProperty("predictionoutput")+"hsqc"));
-                	foshmbc=new FileOutputStream(new File(projectdir+File.separatorChar+"result"+File.separatorChar+props.getProperty("predictionoutput")+"hmbc"));
+                	if(doHmbc)
+                		foshmbc=new FileOutputStream(new File(projectdir+File.separatorChar+"result"+File.separatorChar+props.getProperty("predictionoutput")+"hmbc"));
                 	if(doHsqcTocsy)
                 		foshsqctocsy=new FileOutputStream(new File(projectdir+File.separatorChar+File.separatorChar+"result"+props.getProperty("predictionoutput")+"hsqctocsy"));
                 }
@@ -123,7 +128,8 @@ public class Simulate {
 /* loop over atoms in mol */
                 	if(namesfile.exists()) {
                 		String name=br.readLine()+"\r\n";
-                		foshmbc.write(name.getBytes());
+                		if(doHmbc)
+                			foshmbc.write(name.getBytes());
                 		foshsqc.write(name.getBytes());
                 		if(doHsqcTocsy)
                 			foshsqctocsy.write(name.getBytes());
@@ -180,44 +186,46 @@ public class Simulate {
                         	spheres+=resultc[4];
                         	//from a carbon atom, we get the hs which are 2 or 3 bonds away
                         	List<IAtom> away1 = mol.getConnectedAtomsList(curAtom);
-                        	for(IAtom away1atom : away1) {
-                        		if(away1atom.getAtomicNumber()==1)
-                        			hashydrogen=true;
-                            	List<IAtom> away2 = mol.getConnectedAtomsList(away1atom);
-                            	for(IAtom away2atom : away2) {
-                            		//these are 2 bonds away, if it's a hydrogen, it's a match
-                            		if(away2atom.getAtomicNumber()==1) {
-                                    	float[] resulth = predictor.predict(mol, away2atom, use3d, solvent);
-                                    	predictioncount++;
-                                    	spheres+=resulth[4];
-                                    	if(!done.contains(resultc[1]+";"+resulth[1])) {
-                                    		//System.out.format(Locale.US, "%3d   %3d%8.2f%8.2f\n", i+1, mol.getAtomNumber(away2atom)+1, resultc[1], resulth[1]);
-                                    		fos.write(new String(resultc[1]+","+resulth[1]+",b\n").getBytes());
-                                    		if(debug)
-                                    			foshmbc.write(new String(resultc[1]+","+resulth[1]+"\n").getBytes());
-                                    		//System.out.println(resultc[1]+" "+resulth[1]);
-                                        	done.add(resultc[1]+";"+resulth[1]);
-                                    	}
-                            		}
-                                	List<IAtom> away3 = mol.getConnectedAtomsList(away2atom);
-                                	for(IAtom away3atom : away3) {
-                                		//these are 3 bonds away, if it's a hydrogen, it's a match
-                                		if(away3atom.getAtomicNumber()==1) {
-	                                    	float[] resulth = predictor.predict(mol, away3atom, use3d, solvent);
+                        	if(doHmbc) {
+	                        	for(IAtom away1atom : away1) {
+	                        		if(away1atom.getAtomicNumber()==1)
+	                        			hashydrogen=true;
+	                            	List<IAtom> away2 = mol.getConnectedAtomsList(away1atom);
+	                            	for(IAtom away2atom : away2) {
+	                            		//these are 2 bonds away, if it's a hydrogen, it's a match
+	                            		if(away2atom.getAtomicNumber()==1) {
+	                                    	float[] resulth = predictor.predict(mol, away2atom, use3d, solvent);
 	                                    	predictioncount++;
 	                                    	spheres+=resulth[4];
 	                                    	if(!done.contains(resultc[1]+";"+resulth[1])) {
-	                                    		//System.out.format(Locale.US, "%3d   %3d%8.2f%8.2f\n", i+1, mol.getAtomNumber(away3atom)+1, resultc[1], resulth[1]);
-	                                    		//System.out.println(resultc[1]+" "+resulth[1]);
+	                                    		//System.out.format(Locale.US, "%3d   %3d%8.2f%8.2f\n", i+1, mol.getAtomNumber(away2atom)+1, resultc[1], resulth[1]);
 	                                    		fos.write(new String(resultc[1]+","+resulth[1]+",b\n").getBytes());
 	                                    		if(debug)
 	                                    			foshmbc.write(new String(resultc[1]+","+resulth[1]+"\n").getBytes());
+	                                    		//System.out.println(resultc[1]+" "+resulth[1]);
 	                                        	done.add(resultc[1]+";"+resulth[1]);
 	                                    	}
-                                		}
-                                	}
-                            	}
-                        		
+	                            		}
+	                                	List<IAtom> away3 = mol.getConnectedAtomsList(away2atom);
+	                                	for(IAtom away3atom : away3) {
+	                                		//these are 3 bonds away, if it's a hydrogen, it's a match
+	                                		if(away3atom.getAtomicNumber()==1) {
+		                                    	float[] resulth = predictor.predict(mol, away3atom, use3d, solvent);
+		                                    	predictioncount++;
+		                                    	spheres+=resulth[4];
+		                                    	if(!done.contains(resultc[1]+";"+resulth[1])) {
+		                                    		//System.out.format(Locale.US, "%3d   %3d%8.2f%8.2f\n", i+1, mol.getAtomNumber(away3atom)+1, resultc[1], resulth[1]);
+		                                    		//System.out.println(resultc[1]+" "+resulth[1]);
+		                                    		fos.write(new String(resultc[1]+","+resulth[1]+",b\n").getBytes());
+		                                    		if(debug)
+		                                    			foshmbc.write(new String(resultc[1]+","+resulth[1]+"\n").getBytes());
+		                                        	done.add(resultc[1]+";"+resulth[1]);
+		                                    	}
+	                                		}
+	                                	}
+	                            	}
+	                        		
+	                        	}
                         	}
                         	//for hsqctocsy, we look inside spin system
                         	if(doHsqcTocsy && hashydrogen) {
@@ -259,7 +267,8 @@ public class Simulate {
                 	}
                     if(debug) {
                     	foshsqc.write(new String("Quality "+(spheres/predictioncount)+"\n").getBytes());
-                    	foshmbc.write(new String("Quality "+(spheres/predictioncount)+"\n").getBytes());
+                    	if(doHmbc)
+                    		foshmbc.write(new String("Quality "+(spheres/predictioncount)+"\n").getBytes());
                     	if(doHsqcTocsy)
                     		foshsqctocsy.write(new String("Quality "+(spheres/predictioncount)+"\n").getBytes());
                     }
@@ -268,7 +277,8 @@ public class Simulate {
                 fos.close();
                 if(debug) {
                 	foshsqc.close();
-                	foshmbc.close();
+                	if(doHmbc)
+                		foshmbc.close();
                 	if(doHsqcTocsy)
                 		foshsqctocsy.close();
                 }
