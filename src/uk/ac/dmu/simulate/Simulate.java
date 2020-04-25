@@ -51,7 +51,9 @@ public class Simulate {
         		boolean doHmbc=true;
         		if(props.containsKey("usehmbc") && props.get("usehmbc").equals("false"))
         			doHmbc=false;
-        		System.out.println(doHmbc);
+        		boolean dotwobonds=true;
+        		if(props.containsKey("dotwobonds") && props.get("dotwobonds").equals("false"))
+        			dotwobonds=false;
         		boolean debug=false;
         		if(props.containsKey("debug") && props.get("debug").equals("true"))
         			debug=true;
@@ -192,20 +194,22 @@ public class Simulate {
 	                        			hashydrogen=true;
 	                            	List<IAtom> away2 = mol.getConnectedAtomsList(away1atom);
 	                            	for(IAtom away2atom : away2) {
-	                            		//these are 2 bonds away, if it's a hydrogen, it's a match
-	                            		if(away2atom.getAtomicNumber()==1) {
-	                                    	float[] resulth = predictor.predict(mol, away2atom, use3d, solvent);
-	                                    	predictioncount++;
-	                                    	spheres+=resulth[4];
-	                                    	if(!done.contains(resultc[1]+";"+resulth[1])) {
-	                                    		//System.out.format(Locale.US, "%3d   %3d%8.2f%8.2f\n", i+1, mol.getAtomNumber(away2atom)+1, resultc[1], resulth[1]);
-	                                    		fos.write(new String(resultc[1]+","+resulth[1]+",b\n").getBytes());
-	                                    		if(debug)
-	                                    			foshmbc.write(new String(resultc[1]+","+resulth[1]+"\n").getBytes());
-	                                    		//System.out.println(resultc[1]+" "+resulth[1]);
-	                                        	done.add(resultc[1]+";"+resulth[1]);
-	                                    	}
-	                            		}
+	                            		if(dotwobonds) {
+		                            		//these are 2 bonds away, if it's a hydrogen, it's a match
+		                            		if(away2atom.getAtomicNumber()==1) {
+		                                    	float[] resulth = predictor.predict(mol, away2atom, use3d, solvent);
+		                                    	predictioncount++;
+		                                    	spheres+=resulth[4];
+		                                    	if(!done.contains(resultc[1]+";"+resulth[1])) {
+		                                    		//System.out.format(Locale.US, "%3d   %3d%8.2f%8.2f\n", i+1, mol.getAtomNumber(away2atom)+1, resultc[1], resulth[1]);
+		                                    		fos.write(new String(resultc[1]+","+resulth[1]+",b\n").getBytes());
+		                                    		if(debug)
+		                                    			foshmbc.write(new String(resultc[1]+","+resulth[1]+"\n").getBytes());
+		                                    		//System.out.println(resultc[1]+" "+resulth[1]);
+		                                        	done.add(resultc[1]+";"+resulth[1]);
+		                                    	}
+		                            		}
+		                            	}
 	                                	List<IAtom> away3 = mol.getConnectedAtomsList(away2atom);
 	                                	for(IAtom away3atom : away3) {
 	                                		//these are 3 bonds away, if it's a hydrogen, it's a match
@@ -223,9 +227,8 @@ public class Simulate {
 		                                    	}
 	                                		}
 	                                	}
-	                            	}
-	                        		
-	                        	}
+                            		}
+                            	}
                         	}
                         	//for hsqctocsy, we look inside spin system
                         	if(doHsqcTocsy && hashydrogen) {
