@@ -12,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.openscience.cdk.AtomContainer;
 import org.openscience.cdk.DefaultChemObjectBuilder;
 import org.openscience.cdk.aromaticity.CDKHueckelAromaticityDetector;
@@ -57,18 +60,30 @@ public class Simulate {
         		boolean debug=false;
         		if(props.containsKey("debug") && props.get("debug").equals("true"))
         			debug=true;
-                //if(args.length == 0){
-/* file name as command line argument */
-                //        java.lang.System.exit(1);
-                //}
-/* if second argument is no3d, we do not use extended hose code generator */
-                /* get predictor */             
-            	PredictionTool predictor = new PredictionTool();
-                boolean use3d = true;
-                //if(args.length==2 && args[1].equals("no3d"))
-                //    use3d=false;
-/* get mol file reader (for 1 structure) from file name */
-                //IteratingSDFReader sdfreader = new IteratingSDFReader(new FileReader("testall.sdf"), DefaultChemObjectBuilder.getInstance());
+        		boolean use3d = true;
+        		boolean usedeeplearning=false;
+        		if(props.containsKey("usedeeplearning") && props.get("usedeeplearning").equals("true"))
+        			usedeeplearning=true;
+                /* get predictor or readers for respredict prediction*/             
+            	PredictionTool predictor = null;
+            	JSONArray predsc = null;
+            	JSONArray predsh = null;
+            	if(!usedeeplearning) {
+            		predictor = new PredictionTool();
+            	}else {
+	                JSONParser parser = new JSONParser();
+	                File jsonc=new File(projectdir+"predc.json");
+	                FileReader fis=new FileReader(jsonc);
+	                Object obj = parser.parse(fis);
+	                JSONObject cpred = (JSONObject)obj;
+	                predsc=(JSONArray)cpred.get("predictions");
+	                parser = new JSONParser();
+	                File jsonh=new File(projectdir+"predh.json");
+	                fis=new FileReader(jsonh);
+	                obj = parser.parse(fis);
+	                JSONObject hpred = (JSONObject)obj;
+	                predsh=(JSONArray)hpred.get("predictions");
+            	}
                 FileOutputStream fos=new FileOutputStream(projectdir+File.separatorChar+"result"+File.separatorChar+props.getProperty("predictionoutput"));
                 FileOutputStream foshsqc=null;
                 FileOutputStream foshmbc=null;
@@ -87,10 +102,21 @@ public class Simulate {
                 BufferedReader br=null;
                 if(namesfile.exists())
                 	br=new BufferedReader(new FileReader(namesfile));
-                //int k=0;
+                int k=0;
                 while(smilesreader.hasNext()) {
+                	JSONArray predsmol=null;
+                	JSONArray predsmolh=null;
+                	if(usedeeplearning) {
+                		predsmol=(JSONArray)((JSONObject)predsc.get(k)).get("shifts");
+                		predsmolh=(JSONArray)((JSONObject)predsh.get(k)).get("shifts");
+                	}
                 	//System.out.println(k++);
                 	IAtomContainer mol = smilesreader.next();
+                	for(IAtom atom : mol.atoms()) {
+                		if(atom.getSymbol().equals("H")) {
+                			mol.removeAtomAndConnectedElectronContainers(atom);
+                		}
+                	}
                     StructureDiagramGenerator sdg = new StructureDiagramGenerator();
                     sdg.setMolecule(mol);
                     sdg.generateCoordinates();
@@ -147,8 +173,13 @@ public class Simulate {
                         curAtom = mol.getAtom(i);
                         atomsbyid.put(curAtom.getID(), curAtom);
                         if(curAtom.getAtomicNumber() == 6) {
-                        	float[] resultc = predictor.predict(mol, curAtom, use3d, solvent);
-                        	predictioncount++;
+                        	float[] resultc = null;
+                        	if(usedeeplearning) {
+                        		resultc = shift(predsmol, i);
+                        	}else{
+                        		resultc = predictor.predict(mol, curAtom, use3d, solvent);
+                        	}
+                            predictioncount++;
                         	spheres+=resultc[4];
                         	//System.out.println(i+" c "+resultc[4]);
                         	//from a carbon atom, we get the hs which are 2 or 3 bonds away
@@ -157,7 +188,12 @@ public class Simulate {
                         		//hsqc
                         		//these are 1 bonds away, if it's a hydrogen, it's a match
                         		if(away1atom.getAtomicNumber()==1) {
-                                	float[] resulth = predictor.predict(mol, away1atom, use3d, solvent);
+                                	float[] resulth = null;
+                                	if(usedeeplearning) {
+                                		resulth = shift(predsmolh, mol.getAtomNumber(away1atom));
+                                	}else{
+                                		resulth = predictor.predict(mol, away1atom, use3d, solvent);
+                                	}
                                 	predictioncount++;
                                 	spheres+=resulth[4];
 
@@ -183,7 +219,12 @@ public class Simulate {
                         if(curAtom.getAtomicNumber() == 6) {
                         	//System.out.println(i);
                         	boolean hashydrogen=false;
-                        	float[] resultc = predictor.predict(mol, curAtom, use3d, solvent);
+                        	float[] resultc = null;
+                        	if(usedeeplearning) {
+                        		resultc = shift(predsmol, i);
+                        	}else{
+                        		resultc = predictor.predict(mol, curAtom, use3d, solvent);
+                        	}
                         	predictioncount++;
                         	spheres+=resultc[4];
                         	//from a carbon atom, we get the hs which are 2 or 3 bonds away
@@ -197,7 +238,12 @@ public class Simulate {
 	                            		if(dotwobonds) {
 		                            		//these are 2 bonds away, if it's a hydrogen, it's a match
 		                            		if(away2atom.getAtomicNumber()==1) {
-		                                    	float[] resulth = predictor.predict(mol, away2atom, use3d, solvent);
+		                                    	float[] resulth = null;
+		                                    	if(usedeeplearning) {
+		                                    		resulth = shift(predsmolh, mol.getAtomNumber(away2atom));
+		                                    	}else{
+		                                    		resulth = predictor.predict(mol, away2atom, use3d, solvent);
+		                                    	}
 		                                    	predictioncount++;
 		                                    	spheres+=resulth[4];
 		                                    	if(!done.contains(resultc[1]+";"+resulth[1])) {
@@ -214,7 +260,12 @@ public class Simulate {
 	                                	for(IAtom away3atom : away3) {
 	                                		//these are 3 bonds away, if it's a hydrogen, it's a match
 	                                		if(away3atom.getAtomicNumber()==1) {
-		                                    	float[] resulth = predictor.predict(mol, away3atom, use3d, solvent);
+	                                			float[] resulth = null;
+	                                			if(usedeeplearning) {
+	                                				resulth = shift(predsmolh, mol.getAtomNumber(away3atom));
+	                                			}else{
+	                                				resulth = predictor.predict(mol, away3atom, use3d, solvent);
+	                                			}
 		                                    	predictioncount++;
 		                                    	spheres+=resulth[4];
 		                                    	if(!done.contains(resultc[1]+";"+resulth[1])) {
@@ -244,7 +295,12 @@ public class Simulate {
 		        	                        				//System.out.println("connected");
 		        	                        				if(atom4.getAtomicNumber()==1) {
 		        	                        					//System.out.println("1");
-		        	                        					float[] resulth = predictor.predict(mol, atom4, use3d, solvent);
+		        	                        					float[] resulth = null;
+		        	                        					if(usedeeplearning) {
+		        	                        						resulth = shift(predsmolh, mol.getAtomNumber(atom4));
+		        	                        					}else{
+		        	                        						resulth = predictor.predict(mol, atom4, use3d, solvent);
+		        	                        					}
 		        	                                        	predictioncount++;
 		        	                                        	spheres+=resulth[4];
 		        		                                    	if(!donetocsy.contains(resultc[1]+";"+resulth[1])) {
@@ -276,6 +332,7 @@ public class Simulate {
                     		foshsqctocsy.write(new String("Quality "+(spheres/predictioncount)+"\n").getBytes());
                     }
                 	fos.write(new String("/\n").getBytes());
+                	k++;
                 }
                 fos.close();
                 if(debug) {
@@ -288,7 +345,16 @@ public class Simulate {
                 smilesreader.close();
             	java.lang.System.exit(0);
         }
-        public static void addAndPlaceHydrogens(IAtomContainer container) throws IOException, ClassNotFoundException, CDKException {
+        
+        private static float[] shift(JSONArray predsmol, int atomid) {
+        	for(int i=0;i<predsmol.size();i++) {
+        		if(((Long)((JSONObject)predsmol.get(i)).get("atom_idx")).intValue()==atomid)
+        			return new float[] {0,((Double)((JSONObject)predsmol.get(i)).get("pred_mu")).floatValue(),0,0,0};
+        	}
+			return null;
+		}
+        
+		public static void addAndPlaceHydrogens(IAtomContainer container) throws IOException, ClassNotFoundException, CDKException {
         	addExplicitHydrogensToSatisfyValency(container);
             for (int i = 0; i < container.getAtomCount(); i++) {
               IAtom a = container.getAtom(i);
@@ -319,12 +385,13 @@ public class Simulate {
             }
             double bondLength = GeometryTools.getBondLengthAverage(container);
             new HydrogenPlacer().placeHydrogens2D(container, bondLength);
-          }
+        }
         
         public static void addExplicitHydrogensToSatisfyValency(IAtomContainer mol) throws CDKException{
             addImplicitHydrogensToSatisfyValency(mol);
         	AtomContainerManipulator.convertImplicitToExplicitHydrogens(mol);
-          }
+        }
+        
         public static void addImplicitHydrogensToSatisfyValency(IAtomContainer mol) throws CDKException{
         	CDKAtomTypeMatcher matcher = CDKAtomTypeMatcher.getInstance(mol.getBuilder());    	
             CDKHydrogenAdder hAdder = CDKHydrogenAdder.getInstance(mol.getBuilder());
