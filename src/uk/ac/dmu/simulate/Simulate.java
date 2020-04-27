@@ -187,7 +187,7 @@ public class Simulate {
                         	for(IAtom away1atom : away1) {
                         		//hsqc
                         		//these are 1 bonds away, if it's a hydrogen, it's a match
-                        		if(away1atom.getAtomicNumber()==1) {
+                        		if(away1atom.getAtomicNumber()==1  ) {
                                 	float[] resulth = null;
                                 	if(usedeeplearning) {
                                 		resulth = shift(predsmolh, mol.getAtomNumber(away1atom));
@@ -237,7 +237,7 @@ public class Simulate {
 	                            	for(IAtom away2atom : away2) {
 	                            		if(dotwobonds) {
 		                            		//these are 2 bonds away, if it's a hydrogen, it's a match
-		                            		if(away2atom.getAtomicNumber()==1) {
+		                            		if(away2atom.getAtomicNumber()==1 && away1atom.getAtomicNumber() == 6) {
 		                                    	float[] resulth = null;
 		                                    	if(usedeeplearning) {
 		                                    		resulth = shift(predsmolh, mol.getAtomNumber(away2atom));
@@ -259,7 +259,7 @@ public class Simulate {
 	                                	List<IAtom> away3 = mol.getConnectedAtomsList(away2atom);
 	                                	for(IAtom away3atom : away3) {
 	                                		//these are 3 bonds away, if it's a hydrogen, it's a match
-	                                		if(away3atom.getAtomicNumber()==1) {
+	                                		if(away3atom.getAtomicNumber()==1 && away2atom.getAtomicNumber() == 6) {
 	                                			float[] resulth = null;
 	                                			if(usedeeplearning) {
 	                                				resulth = shift(predsmolh, mol.getAtomNumber(away3atom));
@@ -293,7 +293,7 @@ public class Simulate {
 		        	                        			//System.out.println("equals");
 		        	                        			for(IAtom atom4 : mol.getConnectedAtomsList(atom3)) {
 		        	                        				//System.out.println("connected");
-		        	                        				if(atom4.getAtomicNumber()==1) {
+		        	                        				if(atom4.getAtomicNumber()==1 && atom3.getAtomicNumber() == 6) {
 		        	                        					//System.out.println("1");
 		        	                        					float[] resulth = null;
 		        	                        					if(usedeeplearning) {
