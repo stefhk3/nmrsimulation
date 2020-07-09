@@ -174,9 +174,11 @@ public class Simulate {
                         atomsbyid.put(curAtom.getID(), curAtom);
                         if(curAtom.getAtomicNumber() == 6) {
                         	float[] resultc = null;
-                        	if(usedeeplearning) {
+                        	if(usedeeplearning && predsmol!=null) {
                         		resultc = shift(predsmol, i);
                         	}else{
+                        		if(predictor==null)
+                        			predictor = new PredictionTool();
                         		resultc = predictor.predict(mol, curAtom, use3d, solvent);
                         	}
                             predictioncount++;
@@ -189,7 +191,7 @@ public class Simulate {
                         		//these are 1 bonds away, if it's a hydrogen, it's a match
                         		if(away1atom.getAtomicNumber()==1  ) {
                                 	float[] resulth = null;
-                                	if(usedeeplearning) {
+                                	if(usedeeplearning && predsmolh!=null) {
                                 		resulth = shift(predsmolh, mol.getAtomNumber(away1atom));
                                 	}else{
                                 		resulth = predictor.predict(mol, away1atom, use3d, solvent);
@@ -220,7 +222,7 @@ public class Simulate {
                         	//System.out.println(i);
                         	boolean hashydrogen=false;
                         	float[] resultc = null;
-                        	if(usedeeplearning) {
+                        	if(usedeeplearning && predsmol!=null) {
                         		resultc = shift(predsmol, i);
                         	}else{
                         		resultc = predictor.predict(mol, curAtom, use3d, solvent);
@@ -239,7 +241,7 @@ public class Simulate {
 		                            		//these are 2 bonds away, if it's a hydrogen, it's a match
 		                            		if(away2atom.getAtomicNumber()==1 && away1atom.getAtomicNumber() == 6) {
 		                                    	float[] resulth = null;
-		                                    	if(usedeeplearning) {
+		                                    	if(usedeeplearning && predsmolh!=null) {
 		                                    		resulth = shift(predsmolh, mol.getAtomNumber(away2atom));
 		                                    	}else{
 		                                    		resulth = predictor.predict(mol, away2atom, use3d, solvent);
@@ -261,7 +263,7 @@ public class Simulate {
 	                                		//these are 3 bonds away, if it's a hydrogen, it's a match
 	                                		if(away3atom.getAtomicNumber()==1 && away2atom.getAtomicNumber() == 6) {
 	                                			float[] resulth = null;
-	                                			if(usedeeplearning) {
+	                                			if(usedeeplearning && predsmolh!=null) {
 	                                				resulth = shift(predsmolh, mol.getAtomNumber(away3atom));
 	                                			}else{
 	                                				resulth = predictor.predict(mol, away3atom, use3d, solvent);
@@ -296,7 +298,7 @@ public class Simulate {
 		        	                        				if(atom4.getAtomicNumber()==1 && atom3.getAtomicNumber() == 6) {
 		        	                        					//System.out.println("1");
 		        	                        					float[] resulth = null;
-		        	                        					if(usedeeplearning) {
+		        	                        					if(usedeeplearning && predsmolh!=null) {
 		        	                        						resulth = shift(predsmolh, mol.getAtomNumber(atom4));
 		        	                        					}else{
 		        	                        						resulth = predictor.predict(mol, atom4, use3d, solvent);
