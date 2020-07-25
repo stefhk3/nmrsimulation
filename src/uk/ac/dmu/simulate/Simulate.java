@@ -68,9 +68,8 @@ public class Simulate {
             	PredictionTool predictor = null;
             	JSONArray predsc = null;
             	JSONArray predsh = null;
-            	if(!usedeeplearning) {
-            		predictor = new PredictionTool();
-            	}else {
+            	predictor = new PredictionTool();
+            	if(usedeeplearning) {
 	                JSONParser parser = new JSONParser();
 	                File jsonc=new File(projectdir+"predc.json");
 	                FileReader fis=new FileReader(jsonc);
@@ -173,16 +172,13 @@ public class Simulate {
                         curAtom = mol.getAtom(i);
                         atomsbyid.put(curAtom.getID(), curAtom);
                         if(curAtom.getAtomicNumber() == 6) {
-                        	float[] resultc = null;
-                        	if(usedeeplearning && predsmol!=null) {
+                        	float[] resultc = predictor.predict(mol, curAtom, use3d, solvent);
+                        	if(resultc[4]>=5 && usedeeplearning && predsmol!=null) {
                         		resultc = shift(predsmol, i);
-                        	}else{
-                        		if(predictor==null)
-                        			predictor = new PredictionTool();
-                        		resultc = predictor.predict(mol, curAtom, use3d, solvent);
+                        	}else {
+	                            predictioncount++;
+	                        	spheres+=resultc[4];
                         	}
-                            predictioncount++;
-                        	spheres+=resultc[4];
                         	//System.out.println(i+" c "+resultc[4]);
                         	//from a carbon atom, we get the hs which are 2 or 3 bonds away
                         	List<IAtom> away1 = mol.getConnectedAtomsList(curAtom);
@@ -190,22 +186,19 @@ public class Simulate {
                         		//hsqc
                         		//these are 1 bonds away, if it's a hydrogen, it's a match
                         		if(away1atom.getAtomicNumber()==1  ) {
-                                	float[] resulth = null;
-                                	if(usedeeplearning && predsmolh!=null) {
+                                	float[] resulth = predictor.predict(mol, away1atom, use3d, solvent);
+                                	if(resulth[4]>=5 && usedeeplearning && predsmolh!=null) {
                                 		resulth = shift(predsmolh, mol.getAtomNumber(away1atom));
-                                	}else{
-                                		resulth = predictor.predict(mol, away1atom, use3d, solvent);
+                                	}else {
+	                                	predictioncount++;
+	                                	spheres+=resulth[4];
                                 	}
-                                	predictioncount++;
-                                	spheres+=resulth[4];
-
                                 	//System.out.println(i+" h "+resultc[4]);
-
                                 	if(!done.contains(resultc[1]+";"+resulth[1])) {
                                 		//System.out.format(Locale.US, "%3d   %3d%8.2f%8.2f\n", i+1, mol.getAtomNumber(away1atom)+1, resultc[1], resulth[1]);
                                 		fos.write(new String(resultc[1]+","+resulth[1]+",q\n").getBytes());
                                 		if(debug)
-                                			foshsqc.write(new String(resultc[1]+","+resulth[1]+"\n").getBytes());
+                                			foshsqc.write(new String(resultc[1]+","+resulth[1]+","+(resultc[4]>0 ? resultc[4] : "DL")+","+(resulth[4]>0 ? resulth[4] : "DL")+"\n").getBytes());
                                 		//System.out.println(resultc[4]+" "+resulth[4]);
                                     	done.add(resultc[1]+";"+resulth[1]);
                                 	}
@@ -221,14 +214,13 @@ public class Simulate {
                         if(curAtom.getAtomicNumber() == 6) {
                         	//System.out.println(i);
                         	boolean hashydrogen=false;
-                        	float[] resultc = null;
-                        	if(usedeeplearning && predsmol!=null) {
+                        	float[] resultc = predictor.predict(mol, curAtom, use3d, solvent);
+                        	if(resultc[4]>=5 && usedeeplearning && predsmol!=null) {
                         		resultc = shift(predsmol, i);
                         	}else{
-                        		resultc = predictor.predict(mol, curAtom, use3d, solvent);
+	                        	predictioncount++;
+	                        	spheres+=resultc[4];
                         	}
-                        	predictioncount++;
-                        	spheres+=resultc[4];
                         	//from a carbon atom, we get the hs which are 2 or 3 bonds away
                         	List<IAtom> away1 = mol.getConnectedAtomsList(curAtom);
                         	if(doHmbc) {
@@ -240,19 +232,18 @@ public class Simulate {
 	                            		if(dotwobonds) {
 		                            		//these are 2 bonds away, if it's a hydrogen, it's a match
 		                            		if(away2atom.getAtomicNumber()==1 && away1atom.getAtomicNumber() == 6) {
-		                                    	float[] resulth = null;
-		                                    	if(usedeeplearning && predsmolh!=null) {
+		                                    	float[] resulth = predictor.predict(mol, away2atom, use3d, solvent);
+		                                    	if(resulth[4]>=5 && usedeeplearning && predsmolh!=null) {
 		                                    		resulth = shift(predsmolh, mol.getAtomNumber(away2atom));
 		                                    	}else{
-		                                    		resulth = predictor.predict(mol, away2atom, use3d, solvent);
+			                                    	predictioncount++;
+			                                    	spheres+=resulth[4];
 		                                    	}
-		                                    	predictioncount++;
-		                                    	spheres+=resulth[4];
 		                                    	if(!done.contains(resultc[1]+";"+resulth[1])) {
 		                                    		//System.out.format(Locale.US, "%3d   %3d%8.2f%8.2f\n", i+1, mol.getAtomNumber(away2atom)+1, resultc[1], resulth[1]);
 		                                    		fos.write(new String(resultc[1]+","+resulth[1]+",b\n").getBytes());
 		                                    		if(debug)
-		                                    			foshmbc.write(new String(resultc[1]+","+resulth[1]+"\n").getBytes());
+		                                    			foshmbc.write(new String(resultc[1]+","+resulth[1]+","+(resultc[4]>0 ? resultc[4] : "DL")+","+(resulth[4]>0 ? resulth[4] : "DL")+"\n").getBytes());
 		                                    		//System.out.println(resultc[1]+" "+resulth[1]);
 		                                        	done.add(resultc[1]+";"+resulth[1]);
 		                                    	}
@@ -262,20 +253,19 @@ public class Simulate {
 	                                	for(IAtom away3atom : away3) {
 	                                		//these are 3 bonds away, if it's a hydrogen, it's a match
 	                                		if(away3atom.getAtomicNumber()==1 && away2atom.getAtomicNumber() == 6) {
-	                                			float[] resulth = null;
-	                                			if(usedeeplearning && predsmolh!=null) {
+	                                			float[] resulth = predictor.predict(mol, away3atom, use3d, solvent);
+	                                			if(resulth[4]>=5 && usedeeplearning && predsmolh!=null) {
 	                                				resulth = shift(predsmolh, mol.getAtomNumber(away3atom));
 	                                			}else{
-	                                				resulth = predictor.predict(mol, away3atom, use3d, solvent);
+			                                    	predictioncount++;
+			                                    	spheres+=resulth[4];
 	                                			}
-		                                    	predictioncount++;
-		                                    	spheres+=resulth[4];
-		                                    	if(!done.contains(resultc[1]+";"+resulth[1])) {
+	                                			if(!done.contains(resultc[1]+";"+resulth[1])) {
 		                                    		//System.out.format(Locale.US, "%3d   %3d%8.2f%8.2f\n", i+1, mol.getAtomNumber(away3atom)+1, resultc[1], resulth[1]);
 		                                    		//System.out.println(resultc[1]+" "+resulth[1]);
 		                                    		fos.write(new String(resultc[1]+","+resulth[1]+",b\n").getBytes());
 		                                    		if(debug)
-		                                    			foshmbc.write(new String(resultc[1]+","+resulth[1]+"\n").getBytes());
+		                                    			foshmbc.write(new String(resultc[1]+","+resulth[1]+","+(resultc[4]>0 ? resultc[4] : "DL")+","+(resulth[4]>0 ? resulth[4] : "DL")+"\n").getBytes());
 		                                        	done.add(resultc[1]+";"+resulth[1]);
 		                                    	}
 	                                		}
@@ -297,20 +287,19 @@ public class Simulate {
 		        	                        				//System.out.println("connected");
 		        	                        				if(atom4.getAtomicNumber()==1 && atom3.getAtomicNumber() == 6) {
 		        	                        					//System.out.println("1");
-		        	                        					float[] resulth = null;
-		        	                        					if(usedeeplearning && predsmolh!=null) {
+		        	                        					float[] resulth = predictor.predict(mol, atom4, use3d, solvent);
+		        	                        					if(resulth[4]>=5 && usedeeplearning && predsmolh!=null) {
 		        	                        						resulth = shift(predsmolh, mol.getAtomNumber(atom4));
 		        	                        					}else{
-		        	                        						resulth = predictor.predict(mol, atom4, use3d, solvent);
+			        	                                        	predictioncount++;
+			        	                                        	spheres+=resulth[4];
 		        	                        					}
-		        	                                        	predictioncount++;
-		        	                                        	spheres+=resulth[4];
 		        		                                    	if(!donetocsy.contains(resultc[1]+";"+resulth[1])) {
 		        		                                    		//System.out.format(Locale.US, "%3d   %3d%8.2f%8.2f\n", i+1, mol.getAtomNumber(away3atom)+1, resultc[1], resulth[1]);
 		        		                                    		//System.out.println(resultc[1]+" "+resulth[1]);
 		        		                                    		fos.write(new String(resultc[1]+","+resulth[1]+",t\n").getBytes());
 		        		                                    		if(debug)
-		        		                                    			foshsqctocsy.write(new String(resultc[1]+","+resulth[1]+"\n").getBytes());
+		        		                                    			foshsqctocsy.write(new String(resultc[1]+","+resulth[1]+","+(resultc[4]>0 ? resultc[4] : "DL")+","+(resulth[4]>0 ? resulth[4] : "DL")+"\n").getBytes());
 		        		                                        	donetocsy.add(resultc[1]+";"+resulth[1]);
 		        		                                    	}
 		        	                        				}
@@ -326,7 +315,7 @@ public class Simulate {
                         	}
                         }
                 	}
-                    if(debug) {
+                    if(debug && predictioncount>0) {
                     	foshsqc.write(new String("Quality "+(spheres/predictioncount)+"\n").getBytes());
                     	if(doHmbc)
                     		foshmbc.write(new String("Quality "+(spheres/predictioncount)+"\n").getBytes());

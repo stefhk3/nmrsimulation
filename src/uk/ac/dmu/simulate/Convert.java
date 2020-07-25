@@ -56,7 +56,7 @@ public class Convert {
 	        sdfwriter.close();
 	        smilesreader.close();
 		}
-		System.out.print(props.get("usedeeplearning"));
+		System.out.print(props.get("usedeeplearning")+"_"+props.getProperty("msmsinput").substring(0,props.getProperty("msmsinput").length()-4)+".sdf");
 	}
 
 }
