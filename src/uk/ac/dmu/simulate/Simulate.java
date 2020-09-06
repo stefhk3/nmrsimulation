@@ -229,48 +229,50 @@ public class Simulate {
 	                        			hashydrogen=true;
 	                            	List<IAtom> away2 = mol.getConnectedAtomsList(away1atom);
 	                            	for(IAtom away2atom : away2) {
-	                            		if(dotwobonds) {
-		                            		//these are 2 bonds away, if it's a hydrogen, it's a match
-		                            		if(away2atom.getAtomicNumber()==1 && away1atom.getAtomicNumber() == 6) {
-		                                    	float[] resulth = predictor.predict(mol, away2atom, use3d, solvent);
-		                                    	if(resulth[4]>=5 && usedeeplearning && predsmolh!=null) {
-		                                    		resulth = shift(predsmolh, mol.getAtomNumber(away2atom));
-		                                    	}else{
-			                                    	predictioncount++;
-			                                    	spheres+=resulth[4];
-		                                    	}
-		                                    	if(!done.contains(resultc[1]+";"+resulth[1])) {
-		                                    		//System.out.format(Locale.US, "%3d   %3d%8.2f%8.2f\n", i+1, mol.getAtomNumber(away2atom)+1, resultc[1], resulth[1]);
-		                                    		fos.write(new String(resultc[1]+","+resulth[1]+",b\n").getBytes());
-		                                    		if(debug)
-		                                    			foshmbc.write(new String(resultc[1]+","+resulth[1]+","+(resultc[4]>0 ? resultc[4] : "DL")+","+(resulth[4]>0 ? resulth[4] : "DL")+"\n").getBytes());
-		                                    		//System.out.println(resultc[1]+" "+resulth[1]);
-		                                        	done.add(resultc[1]+";"+resulth[1]);
-		                                    	}
-		                            		}
-		                            	}
-	                                	List<IAtom> away3 = mol.getConnectedAtomsList(away2atom);
-	                                	for(IAtom away3atom : away3) {
-	                                		//these are 3 bonds away, if it's a hydrogen, it's a match
-	                                		if(away3atom.getAtomicNumber()==1 && away2atom.getAtomicNumber() == 6) {
-	                                			float[] resulth = predictor.predict(mol, away3atom, use3d, solvent);
-	                                			if(resulth[4]>=5 && usedeeplearning && predsmolh!=null) {
-	                                				resulth = shift(predsmolh, mol.getAtomNumber(away3atom));
-	                                			}else{
-			                                    	predictioncount++;
-			                                    	spheres+=resulth[4];
-	                                			}
-	                                			if(!done.contains(resultc[1]+";"+resulth[1])) {
-		                                    		//System.out.format(Locale.US, "%3d   %3d%8.2f%8.2f\n", i+1, mol.getAtomNumber(away3atom)+1, resultc[1], resulth[1]);
-		                                    		//System.out.println(resultc[1]+" "+resulth[1]);
-		                                    		fos.write(new String(resultc[1]+","+resulth[1]+",b\n").getBytes());
-		                                    		if(debug)
-		                                    			foshmbc.write(new String(resultc[1]+","+resulth[1]+","+(resultc[4]>0 ? resultc[4] : "DL")+","+(resulth[4]>0 ? resulth[4] : "DL")+"\n").getBytes());
-		                                        	done.add(resultc[1]+";"+resulth[1]);
-		                                    	}
-	                                		}
-	                                	}
-                            		}
+	                            		if(away2atom!=curAtom) {
+		                            		if(dotwobonds) {
+			                            		//these are 2 bonds away, if it's a hydrogen, it's a match
+			                            		if(away2atom.getAtomicNumber()==1 && away1atom.getAtomicNumber() == 6) {
+			                                    	float[] resulth = predictor.predict(mol, away2atom, use3d, solvent);
+			                                    	if(resulth[4]>=5 && usedeeplearning && predsmolh!=null) {
+			                                    		resulth = shift(predsmolh, mol.getAtomNumber(away2atom));
+			                                    	}else{
+				                                    	predictioncount++;
+				                                    	spheres+=resulth[4];
+			                                    	}
+			                                    	if(!done.contains(resultc[1]+";"+resulth[1])) {
+			                                    		//System.out.format(Locale.US, "%3d   %3d%8.2f%8.2f\n", i+1, mol.getAtomNumber(away2atom)+1, resultc[1], resulth[1]);
+			                                    		fos.write(new String(resultc[1]+","+resulth[1]+",b\n").getBytes());
+			                                    		if(debug)
+			                                    			foshmbc.write(new String(resultc[1]+","+resulth[1]+","+(resultc[4]>0 ? resultc[4] : "DL")+","+(resulth[4]>0 ? resulth[4] : "DL")+"\n").getBytes());
+			                                    		//System.out.println(resultc[1]+" "+resulth[1]);
+			                                        	done.add(resultc[1]+";"+resulth[1]);
+			                                    	}
+			                            		}
+			                            	}
+		                                	List<IAtom> away3 = mol.getConnectedAtomsList(away2atom);
+		                                	for(IAtom away3atom : away3) {
+		                                		//these are 3 bonds away, if it's a hydrogen, it's a match
+		                                		if(away3atom.getAtomicNumber()==1 && away2atom.getAtomicNumber() == 6) {
+		                                			float[] resulth = predictor.predict(mol, away3atom, use3d, solvent);
+		                                			if(resulth[4]>=5 && usedeeplearning && predsmolh!=null) {
+		                                				resulth = shift(predsmolh, mol.getAtomNumber(away3atom));
+		                                			}else{
+				                                    	predictioncount++;
+				                                    	spheres+=resulth[4];
+		                                			}
+		                                			if(!done.contains(resultc[1]+";"+resulth[1])) {
+			                                    		//System.out.format(Locale.US, "%3d   %3d%8.2f%8.2f\n", i+1, mol.getAtomNumber(away3atom)+1, resultc[1], resulth[1]);
+			                                    		//System.out.println(resultc[1]+" "+resulth[1]);
+			                                    		fos.write(new String(resultc[1]+","+resulth[1]+",b\n").getBytes());
+			                                    		if(debug)
+			                                    			foshmbc.write(new String(resultc[1]+","+resulth[1]+","+(resultc[4]>0 ? resultc[4] : "DL")+","+(resulth[4]>0 ? resulth[4] : "DL")+"\n").getBytes());
+			                                        	done.add(resultc[1]+";"+resulth[1]);
+			                                    	}
+		                                		}
+		                                	}
+	                            		}
+	                            	}
                             	}
                         	}
                         	//for hsqctocsy, we look inside spin system
